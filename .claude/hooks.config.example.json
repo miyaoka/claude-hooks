@@ -9,8 +9,8 @@
       ],
       "rm": [
         {
-          "pattern": "-rf\\s+(/|~/|/home|/usr|/etc)",
-          "reason": "⚠️ システムディレクトリの削除は禁止",
+          "pattern": "-rf\\s+~",
+          "reason": "⚠️ ホームディレクトリの削除は禁止",
           "decision": "block"
         }
       ],

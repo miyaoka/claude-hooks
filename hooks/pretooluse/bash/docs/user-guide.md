@@ -251,8 +251,13 @@ PreToolUse フックは、マージ後の配列を順番に評価し、最終的
     "Bash": {
       "rm": [
         {
-          "pattern": "-rf\\s+.*(\\s|^)(/|~/|/home|/usr|/etc)",
-          "reason": "システムディレクトリの削除は禁止されています",
+          "pattern": "-rf\\s+\\*",
+          "reason": "現在のディレクトリ全削除は禁止",
+          "decision": "block"
+        },
+        {
+          "pattern": "-rf\\s+~",
+          "reason": "ホームディレクトリの削除は禁止",
           "decision": "block"
         }
       ]

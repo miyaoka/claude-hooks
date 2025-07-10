@@ -142,20 +142,14 @@ hook.sh がグローバルとローカルのルールをマージした後、eva
     "Bash": {
       "rm": [
         {
-          "pattern": "-rf\\s+\\*",
-          "reason": "rm -rf * は危険",
-          "decision": "block"
-        },
-        {
-          "pattern": "-rf\\s+.*(\\s|^)(/|~/|/home|/usr|/etc)",
-          "reason": "システムディレクトリの削除は禁止",
+          "pattern": "-rf\\s+~",
+          "reason": "ホームディレクトリの削除は禁止",
           "decision": "block"
         }
       ],
       "touch": [
         {
-          "reason": "touchコマンドは一時的に禁止",
-          "decision": "block"
+          "reason": "touchコマンドは一要確認"
         }
       ],
       "git": [
