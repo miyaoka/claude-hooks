@@ -6,18 +6,17 @@ Claude Code の動作を拡張・制御するフックコレクション
 
 このリポジトリは、Claude Code の [Hooks 機能](https://docs.anthropic.com/en/docs/claude-code/hooks)を利用して、各種ツールの実行を制御するシステムを提供します。
 
-<img width="929" height="426" alt="image" src="https://github.com/user-attachments/assets/e4e07a05-0d40-4c20-8c8e-d5f266253e65" />
-
+<img alt="実行例" src="https://github.com/user-attachments/assets/e4e07a05-0d40-4c20-8c8e-d5f266253e65" />
 
 ## セットアップ
 
-1. このリポジトリをクローン
+### このリポジトリをクローン
 
 ```bash
 git clone https://github.com/miyaoka/claude-hooks.git
 ```
 
-2. Claude Code の設定ファイル（settings.json）でフックスクリプトのパスを指定
+### Claude Code の設定ファイル（settings.json）で Hook スクリプトのパスを指定
 
 ```json
 {
@@ -37,11 +36,13 @@ git clone https://github.com/miyaoka/claude-hooks.git
 }
 ```
 
-3. ルールファイルを設定
+### ルールファイルを設定（`hooks.config.json`）
 
-本リポジトリには設定のサンプルとして [`.claude/hooks.config.example.json`](.claude/hooks.config.example.json) が含まれています。これを参考に `hooks.config.json` を配置してください：
+hook スクリプトが読み込むためのルールファイルを配置します
 
-- **グローバルルール**: Claude Code の設定ディレクトリ（`~/.claude/` など）に `hooks.config.json` を配置
+本リポジトリにはサンプルファイルとして [`.claude/hooks.config.example.json`](.claude/hooks.config.example.json) が含まれています。この内容を参考に配置してください：
+
+- **グローバルルール**: Claude Code の設定ディレクトリ（`~/.config/claude/` など）に `hooks.config.json` を配置
 - **ローカルルール**: プロジェクトのルートに `.claude/hooks.config.json` を配置
 
 ※ グローバルとローカルの両方を設定した場合、両方のルールがマージされ、ローカルルールが優先されます
