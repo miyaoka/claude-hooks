@@ -14,7 +14,7 @@ Claude Code の動作を拡張・制御するフックコレクション
 git clone https://github.com/miyaoka/claude-hooks.git
 ```
 
-2. Claude Code の設定ファイル（settings.json）でフックのパスを指定
+2. Claude Code の設定ファイル（settings.json）でフックスクリプトのパスを指定
 
 ```json
 {
@@ -36,21 +36,16 @@ git clone https://github.com/miyaoka/claude-hooks.git
 
 3. ルールファイルを設定
 
-```bash
-# ローカル設定（プロジェクト固有のルール）
-cp .claude/hooks.config.example.json .claude/hooks.config.json
-# 必要に応じて編集
+本リポジトリには設定のサンプルとして [`.claude/hooks.config.example.json`](.claude/hooks.config.example.json) が含まれています。これを参考に `hooks.config.json` を配置してください：
 
-# グローバル設定（全プロジェクト共通のルール）も追加する場合
-# Claude Code の設定ディレクトリにもコピー
-# cp .claude/hooks.config.example.json ~/path/to/claude/config/hooks.config.json
-```
+- **グローバルルール**: Claude Code の設定ディレクトリ（`~/.claude/` など）に `hooks.config.json` を配置
+- **ローカルルール**: プロジェクトのルートに `.claude/hooks.config.json` を配置
 
 ※ グローバルとローカルの両方を設定した場合、両方のルールがマージされ、ローカルルールが優先されます
 
 ## 利用可能なフック
 
-### [PreToolUse/Bash](hooks/pretooluse/bash/)
+### [PreToolUse/Bash](hooks/pretooluse/bash/docs/user-guide.md)
 
 Bash コマンドの実行を制御するフック
 
@@ -58,11 +53,9 @@ Bash コマンドの実行を制御するフック
 - 特定のコマンドを自動承認
 - パターンマッチングによる柔軟な制御
 
-## 設定例
+**⚠️ 重要**: 実際に Claude で実行する前に、設定したルールが確実にマッチするかテストすることをお勧めします：
 
-設定例は [`.claude/hooks.config.example.json`](.claude/hooks.config.example.json) を参照してください。
-
-詳細な設定方法は各フックのドキュメントを参照してください。
+→ 詳細は [安全な動作テスト](hooks/pretooluse/bash/docs/user-guide.md#安全な動作テスト) を参照してください。
 
 ## ライセンス
 

@@ -41,7 +41,7 @@
       ],
       "curl": [
         {
-          "reason": "⚠️ curlの代わりにWebSearchまたはWebFetchツールを使用してください",
+          "reason": "⚠️ curlの代わりにWebFetchツールを使用してください",
           "decision": "block"
         }
       ]
