@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## プロジェクト概要
 
-Claude Code の各種フック処理を管理するシステム。
+Claude Code の [Hooks 機能](https://docs.anthropic.com/en/docs/claude-code/hooks)を利用して、各種ツールの実行を設定ファイルベースで制御するシステム
 
 ## アーキテクチャ
 
@@ -12,10 +12,15 @@ Claude Code の各種フック処理を管理するシステム。
 
 ```
 hooks/
-└── pretooluse/      # PreToolUseフック
+├── lib/             # 共通ライブラリ
+│   └── common.sh    # 共通関数
+├── pretooluse/      # PreToolUseフック
+│   └── bash/        # Bashツール用
+└── posttooluse/     # PostToolUseフック
     └── bash/        # Bashツール用
 ```
 
 ### 実装済みフック
 
 - [PreToolUse/Bash](hooks/pretooluse/bash/README.md) - Bash コマンドの実行制御
+- [PostToolUse/Bash](hooks/posttooluse/bash/README.md) - Bash コマンドの実行後処理

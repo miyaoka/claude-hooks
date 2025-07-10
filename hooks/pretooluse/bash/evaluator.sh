@@ -4,6 +4,12 @@
 # 引数: コマンド文字列、ルールJSON
 # 戻り値: JSON形式 {"decision": "...", "reason": "..."}
 
+# カレントディレクトリを取得
+EVALUATOR_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# 共通ライブラリをロード
+source "$EVALUATOR_DIR/../../lib/common.sh"
+
 # 定数定義
 readonly DECISION_BLOCK="block"
 readonly DECISION_APPROVE="approve"
@@ -15,38 +21,9 @@ readonly EMPTY_JSON="{}"
 # 引数: 現在の決定, 新しい決定
 # 戻り値: 0 (新しい決定を採用) または 1 (現在の決定を維持)
 should_update_decision() {
-    local current="$1"
-    local new="$2"
-    
-    # block は最優先
-    if [ "$new" = "$DECISION_BLOCK" ]; then
-        return 0
-    fi
-    
-    # 現在がblockなら更新しない
-    if [ "$current" = "$DECISION_BLOCK" ]; then
-        return 1
-    fi
-    
-    # undefined は approve より優先
-    if [ "$new" = "$DECISION_UNDEFINED" ] && [ "$current" != "$DECISION_UNDEFINED" ]; then
-        return 0
-    fi
-    
-    # approve は最低優先度
-    if [ "$new" = "$DECISION_APPROVE" ] && [ -z "$current" ]; then
-        return 0
-    fi
-    
-    return 1
+    should_update_by_priority "$1" "$2" "$DECISION_BLOCK $DECISION_UNDEFINED $DECISION_APPROVE"
 }
 
-# コマンド名を抽出する
-# 引数: コマンド文字列
-# 戻り値: コマンド名
-extract_command_name() {
-    echo "$1" | awk '{print $1}'
-}
 
 # ルールを評価する
 # 引数: コマンド文字列, ルール配列JSON
@@ -62,9 +39,7 @@ evaluate_rules() {
     
     # コマンド名を取得して、引数部分のみを抽出
     local cmd_name=$(extract_command_name "$parsed_cmd")
-    local cmd_args="${parsed_cmd#$cmd_name}"
-    # 先頭の空白を削除
-    cmd_args=$(echo "$cmd_args" | sed 's/^[[:space:]]*//')
+    local cmd_args=$(extract_command_args "$parsed_cmd")
     
     # ルール配列の長さを取得
     local rules_count=$(echo "$rules" | jq 'length')
@@ -172,87 +147,6 @@ evaluate_bash_command() {
     fi
 }
 
-# クォートの状態を切り替える
-# 引数: 現在の状態 (true/false の文字列)
-# 戻り値: 切り替え後の状態
-toggle_boolean() {
-    [ "$1" = "true" ] && echo "false" || echo "true"
-}
-
-# 文字列の前後の空白を削除する
-# 引数: 文字列
-# 戻り値: トリムされた文字列
-trim_string() {
-    echo "$1" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'
-}
-
-# クォートを考慮したコマンドパーサー
-parse_commands() {
-    local input="$1"
-    local -a commands=()
-    local current_command=""
-    local in_single_quote=false
-    local in_double_quote=false
-    local escaped=false
-    local i=0
-    
-    while [ $i -lt ${#input} ]; do
-        char="${input:$i:1}"
-        next_char="${input:$((i+1)):1}"
-        
-        if $escaped; then
-            current_command+="$char"
-            escaped=false
-        elif [ "$char" = "\\" ] && ! $in_single_quote; then
-            current_command+="$char"
-            escaped=true
-        elif [ "$char" = "'" ] && ! $in_double_quote && ! $escaped; then
-            current_command+="$char"
-            in_single_quote=$(toggle_boolean "$in_single_quote")
-        elif [ "$char" = '"' ] && ! $in_single_quote && ! $escaped; then
-            current_command+="$char"
-            in_double_quote=$(toggle_boolean "$in_double_quote")
-        elif ! $in_single_quote && ! $in_double_quote; then
-            if [ "$char" = "&" ] && [ "$next_char" = "&" ]; then
-                if [ -n "$current_command" ]; then
-                    commands+=("$(trim_string "$current_command")")
-                fi
-                current_command=""
-                ((i++))
-            elif [ "$char" = "|" ] && [ "$next_char" = "|" ]; then
-                if [ -n "$current_command" ]; then
-                    commands+=("$(trim_string "$current_command")")
-                fi
-                current_command=""
-                ((i++))
-            elif [ "$char" = "|" ]; then
-                if [ -n "$current_command" ]; then
-                    commands+=("$(trim_string "$current_command")")
-                fi
-                current_command=""
-            elif [ "$char" = ";" ]; then
-                if [ -n "$current_command" ]; then
-                    commands+=("$(trim_string "$current_command")")
-                fi
-                current_command=""
-            else
-                current_command+="$char"
-            fi
-        else
-            current_command+="$char"
-        fi
-        
-        ((i++))
-    done
-    
-    if [ -n "$current_command" ]; then
-        commands+=("$(trim_string "$current_command")")
-    fi
-    
-    for cmd in "${commands[@]}"; do
-        echo "$cmd"
-    done
-}
 
 # エラーメッセージを出力して終了
 # 引数: エラーメッセージ
