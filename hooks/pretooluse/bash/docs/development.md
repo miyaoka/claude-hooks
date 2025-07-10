@@ -189,3 +189,45 @@ hook.sh がグローバルとローカルのルールをマージした後、eva
 - jq の `//` 演算子は `false` を falsy として扱うため、`has()` での存在確認が必要
 - パターンは実行順序通りに評価され、最初に見つかった `block` で処理終了
 - 複数のパターンがマッチした場合、最も高い優先順位の decision が採用される
+
+## デバッグとテスト
+
+### evaluator.sh の直接テスト
+
+評価エンジンを直接テストして、ルールの動作を確認できる：
+
+```bash
+# テスト用のルールファイルを作成（マージ後の形式）
+cat > test-rules.json << 'EOF'
+{
+  "rm": [
+    {
+      "pattern": "^-rf",
+      "reason": "強制削除は危険",
+      "decision": "block"
+    }
+  ]
+}
+EOF
+
+# evaluator.sh を直接実行
+./hooks/pretooluse/bash/evaluator.sh "rm -rf /tmp/test" test-rules.json
+# 出力: {"decision": "block", "reason": "強制削除は危険"}
+
+./hooks/pretooluse/bash/evaluator.sh "rm /tmp/test" test-rules.json
+# 出力: {}
+```
+
+### hook.sh の直接テスト
+
+hooks.config.json を用意した状態で、フックスクリプト全体をテスト：
+
+```bash
+# Claude Code が送る JSON 形式でテスト
+echo '{"tool_input": {"command": "git status"}}' | ./hooks/pretooluse/bash/hook.sh
+# 出力: {"decision": "approve", "reason": "読み取り専用のgitコマンドは自動承認"}
+
+# 複雑なコマンドのテスト
+echo '{"tool_input": {"command": "cd /tmp && rm -rf *"}}' | ./hooks/pretooluse/bash/hook.sh
+# 出力: {"decision": "block", "reason": "⚠️ rm -rf * で現在のディレクトリすべてを削除は禁止"}
+```
