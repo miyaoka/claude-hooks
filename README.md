@@ -6,6 +6,9 @@ Claude Code の動作を拡張・制御するフックコレクション
 
 このリポジトリは、Claude Code の [Hooks 機能](https://docs.anthropic.com/en/docs/claude-code/hooks)を利用して、各種ツールの実行を制御するシステムを提供します。
 
+<img width="929" height="426" alt="image" src="https://github.com/user-attachments/assets/e4e07a05-0d40-4c20-8c8e-d5f266253e65" />
+
+
 ## セットアップ
 
 1. このリポジトリをクローン
