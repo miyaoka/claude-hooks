@@ -53,6 +53,11 @@
         {
           "action": "warn",
           "reason": "削除操作が成功した場合に警告"
+        },
+        {
+          "pattern": "-rf\\s+\\.\\.",
+          "action": "block",
+          "reason": "⚠️ 親ディレクトリへの再帰的削除が実行されました。意図しない削除の可能性があるため処理を中断します"
         }
       ],
       "git": [
@@ -80,6 +85,37 @@
           "pattern": "log",
           "action": "log",
           "reason": "ログ出力を記録"
+        }
+      ],
+      "find": [
+        {
+          "pattern": "-delete",
+          "action": "error",
+          "reason": "⚠️ findコマンドで-deleteオプションが使用されました"
+        }
+      ],
+      "chmod": [
+        {
+          "pattern": "-R",
+          "action": "ignore",
+          "reason": "再帰的なパーミッション変更（正常な操作として無視）"
+        }
+      ],
+      "*": [
+        {
+          "output_pattern": "(password|secret|api_key|token)\\s*[:=]\\s*\\S+",
+          "action": "block",
+          "reason": "⚠️ 機密情報が出力に含まれています！安全のため処理を中断します"
+        },
+        {
+          "pattern": "^(DROP|TRUNCATE)\\s+(TABLE|DATABASE)",
+          "action": "block",
+          "reason": "⚠️ データベースの破壊的操作が実行されました！後続処理を中断します"
+        },
+        {
+          "error_pattern": "Permission denied",
+          "action": "error",
+          "reason": "権限エラーが発生しました"
         }
       ]
     }

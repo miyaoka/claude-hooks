@@ -140,7 +140,7 @@ readonly ACTION_ERROR="error"
 
 - **log**: `log_command_result()` でファイルに記録
 - **warn/error**: stderr に警告メッセージを出力、exit 1
-- **block**: decision を返す（効果は限定的）
+- **block**: decision を返す（Claudeに自動的にreasonをプロンプトし、後続処理を停止）
 - **ignore**: 何もしない
 
 ### ログファイル
