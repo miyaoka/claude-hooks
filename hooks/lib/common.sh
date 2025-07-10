@@ -212,3 +212,83 @@ should_update_by_priority() {
     
     return 1
 }
+
+# エラーメッセージを出力して終了
+# 引数: エラーメッセージ
+# 戻り値: なし (エラーコード1で終了)
+error_exit() {
+    echo "Error: $1" >&2
+    exit 1
+}
+
+# パターンマッチングを実行
+# 引数: $1=テキスト, $2=パターン
+# 戻り値: 0（マッチ）または 1（マッチしない）
+match_pattern() {
+    local text="$1"
+    local pattern="$2"
+    
+    # パターンが空または"empty"の場合はマッチしない
+    [ -z "$pattern" ] || [ "$pattern" = "empty" ] && return 1
+    
+    # パターンマッチングを実行
+    echo "$text" | grep -qE -- "$pattern" 2>/dev/null
+}
+
+# 評価結果のJSON生成
+# 引数: $1=キー名（"decision"または"action"）, $2=値, $3=理由
+# 戻り値: JSON文字列
+create_result_json() {
+    local key="$1"
+    local value="$2"
+    local reason="$3"
+    
+    if [ -n "$value" ] && [ "$value" != "undefined" ]; then
+        # 値がある場合
+        echo "{\"$key\": \"$value\", \"reason\": \"$reason\"}"
+    elif [ -n "$reason" ]; then
+        # 理由のみの場合
+        echo "{\"reason\": \"$reason\"}"
+    else
+        # 空の場合
+        echo "$EMPTY_JSON"
+    fi
+}
+
+# ルールファイルを読み込んで検証
+# 引数: ルールファイルのパス
+# 戻り値: ルールJSON（標準出力）
+load_and_validate_rules_file() {
+    local rules_file="$1"
+    
+    # ファイルの存在確認
+    [ ! -f "$rules_file" ] && error_exit "Rules file not found: $rules_file"
+    
+    # JSONの読み込み
+    local rules_json=$(cat "$rules_file" 2>/dev/null) || \
+        error_exit "Failed to read rules file: $rules_file"
+    
+    # JSONの検証
+    echo "$rules_json" | jq . >/dev/null 2>&1 || \
+        error_exit "Invalid JSON in rules file: $rules_file"
+    
+    echo "$rules_json"
+}
+
+# 使用方法を表示
+# 引数: なし
+# 戻り値: なし
+show_usage() {
+    echo "Usage: $0 <command> <rules-json-file>" >&2
+}
+
+# コマンドライン引数を検証
+# 引数: 引数の数
+# 戻り値: 0 (成功) または 1 (失敗)
+validate_arguments() {
+    if [ $1 -ne 2 ]; then
+        show_usage
+        return 1
+    fi
+    return 0
+}

@@ -99,7 +99,7 @@ evaluate_rules() {
         
         # コマンドパターンのチェック
         if [ -n "$pattern" ] && [ "$pattern" != "empty" ]; then
-            if ! echo "$cmd_args" | grep -qE -- "$pattern" 2>/dev/null; then
+            if ! match_pattern "$cmd_args" "$pattern"; then
                 match=false
             fi
         fi
@@ -107,14 +107,14 @@ evaluate_rules() {
         
         # 出力パターンのチェック
         if [ -n "$output_pattern" ] && [ "$output_pattern" != "empty" ]; then
-            if ! echo "$output" | grep -qE "$output_pattern" 2>/dev/null; then
+            if ! match_pattern "$output" "$output_pattern"; then
                 match=false
             fi
         fi
         
         # エラーパターンのチェック
         if [ -n "$error_pattern" ] && [ "$error_pattern" != "empty" ]; then
-            if ! echo "$stderr_output" | grep -qE "$error_pattern" 2>/dev/null; then
+            if ! match_pattern "$stderr_output" "$error_pattern"; then
                 match=false
             fi
         fi
@@ -134,11 +134,7 @@ evaluate_rules() {
     done
     
     # 結果を返す
-    if [ -n "$matched_action" ]; then
-        echo "{\"action\": \"$matched_action\", \"reason\": \"$matched_reason\"}"
-    else
-        echo "{}"
-    fi
+    create_result_json "action" "$matched_action" "$matched_reason"
 }
 
 # PostToolUse コマンドを評価

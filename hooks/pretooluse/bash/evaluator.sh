@@ -14,8 +14,6 @@ source "$EVALUATOR_DIR/../../lib/common.sh"
 readonly DECISION_BLOCK="block"
 readonly DECISION_APPROVE="approve"
 readonly DECISION_UNDEFINED="undefined"
-readonly NULL_VALUE="null"
-readonly EMPTY_JSON="{}"
 
 # ルールの優先順位を判定する
 # 引数: 現在の決定, 新しい決定
@@ -60,7 +58,7 @@ evaluate_rules() {
             fi
         else
             # パターンありの場合は、引数部分に対してマッチを行う
-            if echo "$cmd_args" | grep -qE -- "$pattern" 2>/dev/null; then
+            if match_pattern "$cmd_args" "$pattern"; then
                 local new_decision="$rule_decision"
                 if [ -z "$new_decision" ] && [ -n "$rule_reason" ]; then
                     new_decision="$DECISION_UNDEFINED"
@@ -83,16 +81,8 @@ evaluate_rules() {
     local final_decision="${matched_decision:-$default_decision}"
     local final_reason="${matched_reason:-$default_reason}"
     
-    if [ "$final_decision" = "$DECISION_UNDEFINED" ] && [ -n "$final_reason" ]; then
-        # decisionが未定義の場合はreasonのみ返す
-        echo "{\"reason\": \"$final_reason\"}"
-    elif [ -n "$final_decision" ] && [ "$final_decision" != "$DECISION_UNDEFINED" ]; then
-        # decisionが定義されている場合
-        echo "{\"decision\": \"$final_decision\", \"reason\": \"$final_reason\"}"
-    else
-        # 何もマッチしない場合
-        echo "{}"
-    fi
+    # 結果JSONを生成
+    create_result_json "decision" "$final_decision" "$final_reason"
 }
 
 # メイン評価関数
@@ -135,44 +125,9 @@ evaluate_bash_command() {
     done < <(parse_commands "$command")
     
     # 結果を返す
-    if [ "$final_decision" = "$DECISION_UNDEFINED" ] && [ -n "$final_reason" ]; then
-        # decisionが未定義の場合はreasonのみ返す
-        echo "{\"reason\": \"$final_reason\"}"
-    elif [ -n "$final_decision" ] && [ "$final_decision" != "$DECISION_UNDEFINED" ]; then
-        # decisionが定義されている場合
-        echo "{\"decision\": \"$final_decision\", \"reason\": \"$final_reason\"}"
-    else
-        # 該当なしの場合は通常の権限フローを使用
-        echo "$EMPTY_JSON"
-    fi
+    create_result_json "decision" "$final_decision" "$final_reason"
 }
 
-
-# エラーメッセージを出力して終了
-# 引数: エラーメッセージ
-# 戻り値: なし (エラーコード1で終了)
-error_exit() {
-    echo "Error: $1" >&2
-    exit 1
-}
-
-# 使用方法を表示
-# 引数: なし
-# 戻り値: なし
-show_usage() {
-    echo "Usage: $0 <command> <rules-json-file>" >&2
-}
-
-# コマンドライン引数を検証
-# 引数: 引数の数
-# 戻り値: 0 (成功) または 1 (失敗)
-validate_arguments() {
-    if [ $1 -ne 2 ]; then
-        show_usage
-        return 1
-    fi
-    return 0
-}
 
 # コマンドライン引数として実行する場合
 if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
@@ -184,18 +139,8 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
     command="$1"
     rules_file="$2"
     
-    # ルールファイルの存在確認
-    if [ ! -f "$rules_file" ]; then
-        error_exit "Rules file not found: $rules_file"
-    fi
-    
-    # ルールJSONの読み込み
-    rules_json=$(cat "$rules_file" 2>/dev/null) || error_exit "Failed to read rules file: $rules_file"
-    
-    # JSONの検証
-    if ! echo "$rules_json" | jq . >/dev/null 2>&1; then
-        error_exit "Invalid JSON in rules file: $rules_file"
-    fi
+    # ルールファイルを読み込んで検証
+    rules_json=$(load_and_validate_rules_file "$rules_file")
     
     # 評価の実行
     evaluate_bash_command "$command" "$rules_json"
