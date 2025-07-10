@@ -1,0 +1,50 @@
+{
+  "PreToolUse": {
+    "Bash": {
+      "ls": [
+        {
+          "reason": "lsコマンドは安全なので自動承認",
+          "decision": "approve"
+        }
+      ],
+      "rm": [
+        {
+          "pattern": "-rf\\s+(/|~/|/home|/usr|/etc)",
+          "reason": "⚠️ システムディレクトリの削除は禁止",
+          "decision": "block"
+        }
+      ],
+      "git": [
+        {
+          "pattern": "^(status|log|diff)",
+          "reason": "読み取り専用のgitコマンドは自動承認",
+          "decision": "approve"
+        },
+        {
+          "pattern": "^push",
+          "reason": "⚠️ pushはユーザーが行います",
+          "decision": "block"
+        }
+      ],
+      "npm": [
+        {
+          "pattern": "^install.*(-g|--global)",
+          "reason": "グローバルインストールは確認が必要"
+        }
+      ],
+      "chmod": [
+        {
+          "pattern": "(777|666)",
+          "reason": "⚠️ 過度に緩いパーミッション設定は禁止",
+          "decision": "block"
+        }
+      ],
+      "curl": [
+        {
+          "reason": "⚠️ curlの代わりにWebSearchまたはWebFetchツールを使用してください",
+          "decision": "block"
+        }
+      ]
+    }
+  }
+}
