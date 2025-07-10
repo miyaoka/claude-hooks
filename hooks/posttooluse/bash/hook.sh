@@ -56,20 +56,8 @@ hook_main() {
         exit 0
     fi
     
-    # 設定ファイルを読み込む（PostToolUse用）
-    local claude_config_dir=$(find_claude_config_dir)
-    local global_rules=""
-    local config="{}"
-    
-    # グローバルルールを読み込む
-    if [ -n "$claude_config_dir" ]; then
-        global_rules="$claude_config_dir/$RULES_FILE_NAME"
-        if [ -f "$global_rules" ]; then
-            config=$(cat "$global_rules" 2>/dev/null | jq --arg hook_type "$HOOK_TYPE" --arg tool_name "$TOOL_NAME" '.[$hook_type][$tool_name] // {}')
-        fi
-    fi
-    
-    # ローカルルールを読み込む（今回は省略）
+    # 設定ファイルを読み込む
+    local config=$(load_config "$HOOK_TYPE" "$TOOL_NAME")
     
     # 設定が空の場合
     if [ "$config" = "{}" ] || [ -z "$config" ]; then

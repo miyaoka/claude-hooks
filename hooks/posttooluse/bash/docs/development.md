@@ -70,7 +70,7 @@ claude-hooks/
 }
 ```
 
-### 重要な注意点
+### Claude Code API の仕様
 
 - **exit_code は提供されない**: Claude Code の仕様により、終了コードは含まれない
 - **エラー時は呼ばれない**: コマンドがエラーになった場合、PostToolUse フックは実行されない
@@ -226,10 +226,7 @@ echo '{"tool_input": {"command": "echo log"}, "tool_response": {"stdout": "log",
 
 ## 既知の制限
 
-1. **exit_code が利用不可**: 終了コードベースのルールは機能しない
-2. **エラーコマンドは対象外**: 失敗したコマンドでは PostToolUse が呼ばれない
-3. **ローカル設定未実装**: 現在はグローバル設定のみサポート
-4. **ブロックの効果が限定的**: 既に実行済みのため、実質的な効果はない
+1. **warn/error アクションが無効**: stderrへの出力はClaude Codeでは表示されない
 
 ## デバッグ
 
