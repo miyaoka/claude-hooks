@@ -31,6 +31,17 @@ git clone https://github.com/miyaoka/claude-hooks.git
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[本リポジトリのパス]/hooks/posttooluse/bash/hook.sh" // ← 実際のパスを指定
+          }
+        ]
+      }
     ]
   }
 }
@@ -60,6 +71,14 @@ Bash コマンドの実行を制御するフック
 **⚠️ 重要**: 実際に Claude で実行する前に、設定したルールが確実にマッチするかテストすることをお勧めします：
 
 → 詳細は [安全な動作テスト](hooks/pretooluse/bash/docs/user-guide.md#安全な動作テスト) を参照してください。
+
+### [PostToolUse/Bash](hooks/posttooluse/bash/README.md)
+
+Bash コマンドの実行後処理を行うフック
+
+- コマンド実行結果のログ記録
+- 脆弱性検出時の警告
+- 削除操作などの重要な操作の通知
 
 ## ライセンス
 

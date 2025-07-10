@@ -51,7 +51,6 @@
     "Bash": {
       "rm": [
         {
-          "exit_code": "0",
           "action": "warn",
           "reason": "削除操作が成功した場合に警告"
         }
@@ -59,14 +58,13 @@
       "git": [
         {
           "pattern": "^(commit|push)",
-          "exit_code": "0",
           "action": "log",
           "reason": "Git の変更操作を記録"
         }
       ],
       "npm": [
         {
-          "output_pattern": "vulnerabilities",
+          "output_pattern": "vulnerability",
           "action": "warn",
           "reason": "脆弱性が検出された場合に警告"
         }
@@ -77,19 +75,13 @@
           "reason": "sudo コマンドの使用を記録"
         }
       ],
-      "*": [
+      "echo": [
         {
-          "error_pattern": "Permission denied",
-          "action": "error",
-          "reason": "権限エラーが発生した場合にエラー"
-        },
-        {
-          "exit_code": "non-zero",
-          "action": "warn",
-          "reason": "エラー終了したコマンドを警告"
+          "pattern": "log",
+          "action": "log",
+          "reason": "ログ出力を記録"
         }
-      ],
-      "default_action": "ignore"
+      ]
     }
   }
 }
