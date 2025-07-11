@@ -3,9 +3,9 @@
     "Bash": [
       {
         "command": "echo",
-        "args": "hell",
+        "args": "hello",
         "decision": "approve",
-        "reason": "このプロジェクトではhellは許可"
+        "reason": "このプロジェクトではhelloは許可"
       },
       {
         "command": "touch",
@@ -17,33 +17,6 @@
         "args": "--dry-run",
         "decision": "approve",
         "reason": "dry-runオプションは安全なので自動承認"
-      },
-      {
-        "command": "cat",
-        "decision": "approve",
-        "reason": "【ローカル1】catコマンドを承認に上書き"
-      },
-      {
-        "command": "cat",
-        "decision": "block",
-        "reason": "【ローカル2】やっぱりcatコマンドをブロックに再上書き"
-      },
-      {
-        "command": "cat",
-        "args": "\\.txt$",
-        "decision": "block",
-        "reason": "【ローカル】.txtファイルの表示をブロックに上書き"
-      },
-      {
-        "command": "head",
-        "args": "-n\\s*10",
-        "decision": "block",
-        "reason": "【ローカル】head -n 10をブロックに上書き"
-      },
-      {
-        "command": "head",
-        "decision": "approve",
-        "reason": "【ローカル】headコマンド全体は承認"
       }
     ]
   },

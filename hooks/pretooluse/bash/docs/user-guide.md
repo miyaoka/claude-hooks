@@ -238,20 +238,20 @@ PreToolUse フックは、マージ後の配列を順番に評価し、最終的
 ```json
 {
   "PreToolUse": {
-    "Bash": {
-      "rm": [
-        {
-          "pattern": "-rf\\s+\\*",
-          "reason": "現在のディレクトリ全削除は禁止",
-          "decision": "block"
-        },
-        {
-          "pattern": "-rf\\s+~",
-          "reason": "ホームディレクトリの削除は禁止",
-          "decision": "block"
-        }
-      ]
-    }
+    "Bash": [
+      {
+        "command": "rm",
+        "args": "-rf\\s+\\*",
+        "reason": "現在のディレクトリ全削除は禁止",
+        "decision": "block"
+      },
+      {
+        "command": "rm",
+        "args": "-rf\\s+~",
+        "reason": "ホームディレクトリの削除は禁止",
+        "decision": "block"
+      }
+    ]
   }
 }
 ```
@@ -261,15 +261,14 @@ PreToolUse フックは、マージ後の配列を順番に評価し、最終的
 ```json
 {
   "PreToolUse": {
-    "Bash": {
-      "git": [
-        {
-          "pattern": "^(status|log|diff|branch)",
-          "reason": "読み取り専用のgitコマンド",
-          "decision": "approve"
-        }
-      ]
-    }
+    "Bash": [
+      {
+        "command": "git",
+        "args": "^(status|log|diff|branch)",
+        "reason": "読み取り専用のgitコマンド",
+        "decision": "approve"
+      }
+    ]
   }
 }
 ```
@@ -279,19 +278,17 @@ PreToolUse フックは、マージ後の配列を順番に評価し、最終的
 ```json
 {
   "PreToolUse": {
-    "Bash": {
-      "sudo": [
-        {
-          "reason": "管理者権限での実行は常に確認が必要"
-        }
-      ],
-      "curl": [
-        {
-          "decision": "block",
-          "reason": "外部へのアクセスは禁止"
-        }
-      ]
-    }
+    "Bash": [
+      {
+        "command": "sudo",
+        "reason": "管理者権限での実行は常に確認が必要"
+      },
+      {
+        "command": "curl",
+        "decision": "block",
+        "reason": "外部へのアクセスは禁止"
+      }
+    ]
   }
 }
 ```

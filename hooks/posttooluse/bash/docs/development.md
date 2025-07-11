@@ -165,35 +165,32 @@ log
 ```json
 {
   "PostToolUse": {
-    "Bash": {
-      "コマンド名": [
-        {
-          "pattern": "コマンド引数の正規表現",
-          "output_pattern": "標準出力の正規表現",
-          "error_pattern": "標準エラー出力の正規表現",
-          "action": "log|warn|error|ignore",
-          "reason": "アクションの理由"
-        }
-      ],
-      "*": [
-        // ワイルドカードルール（すべてのコマンドにマッチ）
-      ]
-    }
+    "Bash": [
+      {
+        "command": "コマンド名",  // 省略可能（省略時は全コマンドに適用）
+        "args": "コマンド引数の正規表現",
+        "stdout": "標準出力の正規表現",
+        "stderr": "標準エラー出力の正規表現",
+        "action": "log|block",
+        "reason": "アクションの理由"
+      }
+    ]
   }
 }
 ```
 
 ### マッチング条件
 
-- `pattern`: コマンド引数に対する正規表現
-- `output_pattern`: stdout に対する正規表現
-- `error_pattern`: stderr に対する正規表現
+- `command`: コマンド名（省略可能、省略時は全コマンドに適用）
+- `args`: コマンド引数に対する正規表現
+- `stdout`: stdout に対する正規表現
+- `stderr`: stderr に対する正規表現
 
 すべての指定された条件が AND で評価される
 
 ### アクションの優先順位
 
-`block` > `error` > `warn` > `log` > `ignore`
+`block` > `log`
 
 複数のルールがマッチした場合、最も優先度の高いアクションが採用される
 
