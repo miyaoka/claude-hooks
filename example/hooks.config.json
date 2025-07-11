@@ -1,0 +1,37 @@
+{
+  "PreToolUse": {
+    "Bash": [
+      {
+        "command": "rm",
+        "args": "^-rf",
+        "reason": "強制削除は危険な操作です",
+        "decision": "block"
+      },
+      {
+        "command": "git",
+        "args": "^(status|log|diff)$",
+        "reason": "読み取り専用のGitコマンド",
+        "decision": "approve"
+      },
+      {
+        "args": "--force",
+        "reason": "全コマンドの--forceオプションは危険",
+        "decision": "block"
+      }
+    ]
+  },
+  "PostToolUse": {
+    "Bash": [
+      {
+        "command": "rm",
+        "action": "log",
+        "reason": "削除操作を記録"
+      },
+      {
+        "stdout": "(password|secret|api_key)\\s*[:=]",
+        "action": "block",
+        "reason": "機密情報が出力に含まれています"
+      }
+    ]
+  }
+}

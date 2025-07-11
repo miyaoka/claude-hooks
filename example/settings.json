@@ -1,0 +1,16 @@
+{
+  "tools": {
+    "hooks": [
+      {
+        "hook_type": "PreToolUse",
+        "tool_name": "Bash",
+        "command": "./hooks/pretooluse/bash.ts"
+      },
+      {
+        "hook_type": "PostToolUse",
+        "tool_name": "Bash",
+        "command": "./hooks/posttooluse/bash.ts"
+      }
+    ]
+  }
+}
