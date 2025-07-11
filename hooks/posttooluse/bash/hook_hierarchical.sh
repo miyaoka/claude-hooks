@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# PostToolUse/Bash Hook（フラット構造版）
-#
+# PostToolUse/Bash Hook
+
 # PostToolUse/Bashで受け取るJSONの形式:
 # {
 #   "session_id": "...",
@@ -15,17 +15,18 @@
 #   "tool_response": {
 #     "stdout": "標準出力の内容",
 #     "stderr": "標準エラー出力の内容",
-#     "interrupted": false,
-#     "isImage": false
+#     "interrupted": false,  // ユーザーによる中断の有無
+#     "isImage": false       // 画像出力かどうか
 #   }
 # }
-#
-# 注意: exit_code や success フィールドは提供されない
+# 
+# 重要な注意点:
+# - エラーが発生したコマンドではPostToolUseフックは呼ばれない（成功時のみ）
+
 
 # 定数定義
 readonly HOOK_TYPE="PostToolUse"
 readonly TOOL_NAME="Bash"
-readonly EMPTY_RESULT="{}"
 
 # カレントディレクトリを取得
 HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -33,34 +34,33 @@ HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # 共通ライブラリをロード
 source "$HOOK_DIR/../../lib/common.sh"
 
+# フック共通ベースをロード
+source "$HOOK_DIR/../../lib/hook_base.sh"
+
 # 評価エンジンをロード
 source "$HOOK_DIR/evaluator.sh"
 
-# メイン処理
-main() {
+# メイン処理の実装
+hook_main() {
     # 標準入力からJSONを読み取る
-    local input=$(cat)
-    
-    # デバッグ出力（必要に応じて有効化）
-    if [ -n "$CLAUDE_HOOKS_DEBUG" ]; then
-        echo "$input" > /tmp/claude-posthook-input-flat.json
-    fi
+    local input=$(read_and_validate_input)
     
     # 必要な値を抽出
     local command=$(extract_json_value "$input" '.tool_input.command // empty')
     local tool_response=$(extract_json_value "$input" '.tool_response // {}')
     
-    # コマンドが空の場合は何もしない
-    if [ -z "$command" ] || [ "$command" = "empty" ]; then
+    # interruptedの場合は何もしない
+    local interrupted=$(extract_json_value "$tool_response" '.interrupted // false')
+    if [ "$interrupted" = "true" ]; then
         echo "$EMPTY_RESULT"
         exit 0
     fi
     
-    # 設定ファイルを読み込む（フラット構造）
-    local config=$(load_config_flat "$HOOK_TYPE" "$TOOL_NAME")
+    # 設定ファイルを読み込む
+    local config=$(load_config "$HOOK_TYPE" "$TOOL_NAME")
     
     # 設定が空の場合
-    if [ "$config" = "[]" ] || [ -z "$config" ]; then
+    if [ "$config" = "{}" ] || [ -z "$config" ]; then
         echo "$EMPTY_RESULT"
         exit 0
     fi
@@ -72,5 +72,5 @@ main() {
     echo "$result"
 }
 
-# メイン処理を実行
-main
+# フックを実行
+run_hook

@@ -2,9 +2,46 @@
 
 ## 概要
 
-Claude Code の PreToolUse フックシステムの内部実装仕様。一般的な使用方法については [bash-command-rules.md](bash-command-rules.md) を参照
+Claude Code の PreToolUse フックシステムの内部実装仕様。一般的な使用方法については [user-guide.md](user-guide.md) を参照
 
 この実装は [Claude Code Hooks API](https://docs.anthropic.com/en/docs/claude-code/hooks) に基づいている
+
+## 設定ファイル構造
+
+2025年7月のアップデートでフラット構造に移行しました。
+
+### 新構造（フラット配列）
+```json
+{
+  "PreToolUse": {
+    "Bash": [
+      {
+        "command": "rm",       // オプション
+        "args": "-rf",         // オプション
+        "decision": "block",   // オプション
+        "reason": "危険な操作"
+      }
+    ]
+  }
+}
+```
+
+### 旧構造（階層型） - 後方互換性のため保持
+```json
+{
+  "PreToolUse": {
+    "Bash": {
+      "rm": [
+        {
+          "pattern": "-rf",
+          "decision": "block",
+          "reason": "危険な操作"
+        }
+      ]
+    }
+  }
+}
+```
 
 ## ファイル構成
 

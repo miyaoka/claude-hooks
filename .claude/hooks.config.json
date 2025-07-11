@@ -1,0 +1,38 @@
+{
+  "PreToolUse": {
+    "Bash": [
+      {
+        "command": "echo",
+        "args": "hello",
+        "decision": "approve",
+        "reason": "このプロジェクトではhelloは許可"
+      },
+      {
+        "command": "touch",
+        "args": "\\.md$",
+        "decision": "approve",
+        "reason": "マークダウンファイルの作成は自動承認"
+      },
+      {
+        "args": "--dry-run",
+        "decision": "approve",
+        "reason": "dry-runオプションは安全なので自動承認"
+      }
+    ]
+  },
+  "PostToolUse": {
+    "Bash": [
+      {
+        "command": "echo",
+        "args": "test",
+        "action": "log",
+        "reason": "テストエコーを記録"
+      },
+      {
+        "stdout": "TODO",
+        "action": "log",
+        "reason": "TODO出力を記録"
+      }
+    ]
+  }
+}

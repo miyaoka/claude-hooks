@@ -33,44 +33,46 @@ Bash コマンドの実行後処理を行う PostToolUse フック
 ```json
 {
   "PostToolUse": {
-    "Bash": {
-      "rm": [
-        {
-          "action": "warn",
-          "reason": "削除操作が成功した場合に警告"
-        }
-      ],
-      "git": [
-        {
-          "pattern": "^(commit|push)",
-          "action": "log",
-          "reason": "Git の変更操作を記録"
-        }
-      ],
-      "npm": [
-        {
-          "output_pattern": "vulnerability",
-          "action": "warn",
-          "reason": "脆弱性が検出された場合に警告"
-        }
-      ],
-      "echo": [
-        {
-          "pattern": "log",
-          "action": "log",
-          "reason": "ログ出力を記録"
-        }
-      ]
-    }
+    "Bash": [
+      {
+        "command": "rm",
+        "action": "log",
+        "reason": "削除操作を記録"
+      },
+      {
+        "command": "git",
+        "args": "^(commit|push)",
+        "action": "log",
+        "reason": "Git の変更操作を記録"
+      },
+      {
+        "command": "npm",
+        "stdout": "vulnerability",
+        "action": "log",
+        "reason": "脆弱性が検出された場合に記録"
+      },
+      {
+        "stdout": "(password|secret|api_key)\\s*[:=]",
+        "action": "block",
+        "reason": "機密情報が出力に含まれています"
+      },
+      {
+        "command": "echo",
+        "args": "log",
+        "action": "log",
+        "reason": "ログ出力を記録"
+      }
+    ]
   }
 }
 ```
 
 ## ルールのマッチング条件
 
-- **pattern** - コマンド引数に対する正規表現パターン
-- **output_pattern** - 標準出力に対する正規表現パターン
-- **error_pattern** - 標準エラー出力に対する正規表現パターン
+- **command** - 対象コマンド名（省略時は全コマンド）
+- **args** - コマンド引数に対する正規表現パターン
+- **stdout** - 標準出力に対する正規表現パターン
+- **stderr** - 標準エラー出力に対する正規表現パターン
 
 すべての条件が AND で評価されます。
 

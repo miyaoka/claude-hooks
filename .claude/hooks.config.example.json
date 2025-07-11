@@ -1,123 +1,108 @@
 {
   "PreToolUse": {
-    "Bash": {
-      "ls": [
-        {
-          "reason": "lsコマンドは安全なので自動承認",
-          "decision": "approve"
-        }
-      ],
-      "rm": [
-        {
-          "pattern": "-rf\\s+~",
-          "reason": "⚠️ ホームディレクトリの削除は禁止",
-          "decision": "block"
-        }
-      ],
-      "git": [
-        {
-          "pattern": "^(status|log|diff)",
-          "reason": "読み取り専用のgitコマンドは自動承認",
-          "decision": "approve"
-        },
-        {
-          "pattern": "^push",
-          "reason": "⚠️ pushはユーザーが行います",
-          "decision": "block"
-        }
-      ],
-      "npm": [
-        {
-          "pattern": "^install.*(-g|--global)",
-          "reason": "グローバルインストールは確認が必要"
-        }
-      ],
-      "chmod": [
-        {
-          "pattern": "(777|666)",
-          "reason": "⚠️ 過度に緩いパーミッション設定は禁止",
-          "decision": "block"
-        }
-      ],
-      "curl": [
-        {
-          "reason": "⚠️ curlの代わりにWebFetchツールを使用してください",
-          "decision": "block"
-        }
-      ]
-    }
+    "Bash": [
+      {
+        "command": "ls",
+        "decision": "approve",
+        "reason": "lsコマンドは安全なので自動承認"
+      },
+      {
+        "command": "rm",
+        "args": "-rf\\s+~",
+        "decision": "block",
+        "reason": "⚠️ ホームディレクトリの削除は禁止"
+      },
+      {
+        "command": "git",
+        "args": "^(status|log|diff)",
+        "decision": "approve",
+        "reason": "読み取り専用のgitコマンドは自動承認"
+      },
+      {
+        "command": "git",
+        "args": "^push",
+        "decision": "block",
+        "reason": "⚠️ pushはユーザーが行います"
+      },
+      {
+        "command": "npm",
+        "args": "^install.*(-g|--global)",
+        "reason": "グローバルインストールは確認が必要"
+      },
+      {
+        "command": "chmod",
+        "args": "(777|666)",
+        "decision": "block",
+        "reason": "⚠️ 過度に緩いパーミッション設定は禁止"
+      },
+      {
+        "command": "curl",
+        "decision": "block",
+        "reason": "⚠️ curlの代わりにWebFetchツールを使用してください"
+      }
+    ]
   },
   "PostToolUse": {
-    "Bash": {
-      "rm": [
-        {
-          "action": "warn",
-          "reason": "削除操作が成功した場合に警告"
-        },
-        {
-          "pattern": "-rf\\s+\\.\\.",
-          "action": "block",
-          "reason": "⚠️ 親ディレクトリへの再帰的削除が実行されました。意図しない削除の可能性があるため処理を中断します"
-        }
-      ],
-      "git": [
-        {
-          "pattern": "^(commit|push)",
-          "action": "log",
-          "reason": "Git の変更操作を記録"
-        }
-      ],
-      "npm": [
-        {
-          "output_pattern": "vulnerability",
-          "action": "warn",
-          "reason": "脆弱性が検出された場合に警告"
-        }
-      ],
-      "sudo": [
-        {
-          "action": "log",
-          "reason": "sudo コマンドの使用を記録"
-        }
-      ],
-      "echo": [
-        {
-          "pattern": "log",
-          "action": "log",
-          "reason": "ログ出力を記録"
-        }
-      ],
-      "find": [
-        {
-          "pattern": "-delete",
-          "action": "error",
-          "reason": "⚠️ findコマンドで-deleteオプションが使用されました"
-        }
-      ],
-      "chmod": [
-        {
-          "pattern": "-R",
-          "action": "ignore",
-          "reason": "再帰的なパーミッション変更（正常な操作として無視）"
-        }
-      ],
-      "*": [
-        {
-          "output_pattern": "(password|secret|api_key|token)\\s*[:=]\\s*\\S+",
-          "action": "block",
-          "reason": "⚠️ 機密情報が出力に含まれています！安全のため処理を中断します"
-        },
-        {
-          "pattern": "^(DROP|TRUNCATE)\\s+(TABLE|DATABASE)",
-          "action": "block",
-          "reason": "⚠️ データベースの破壊的操作が実行されました！後続処理を中断します"
-        },
-        {
-          "error_pattern": "Permission denied",
-          "action": "error",
-          "reason": "権限エラーが発生しました"
-        }
-      ]
-    }
+    "Bash": [
+      {
+        "command": "rm",
+        "action": "log",
+        "reason": "削除操作を記録"
+      },
+      {
+        "command": "rm",
+        "args": "-rf\\s+\\.\\.",
+        "action": "block",
+        "reason": "⚠️ 親ディレクトリへの再帰的削除が実行されました。意図しない削除の可能性があるため処理を中断します"
+      },
+      {
+        "command": "git",
+        "args": "^(commit|push)",
+        "action": "log",
+        "reason": "Git の変更操作を記録"
+      },
+      {
+        "command": "npm",
+        "stdout": "vulnerability",
+        "action": "log",
+        "reason": "脆弱性が検出された場合に記録"
+      },
+      {
+        "command": "sudo",
+        "action": "log",
+        "reason": "sudo コマンドの使用を記録"
+      },
+      {
+        "command": "echo",
+        "args": "log",
+        "action": "log",
+        "reason": "ログ出力を記録"
+      },
+      {
+        "command": "find",
+        "args": "-delete",
+        "action": "log",
+        "reason": "findコマンドで-deleteオプションが使用されました"
+      },
+      {
+        "command": "chmod",
+        "args": "-R"
+      },
+      {
+        "stdout": "(password|secret|api_key|token)\\s*[:=]\\s*\\S+",
+        "action": "block",
+        "reason": "⚠️ 機密情報が出力に含まれています！安全のため処理を中断します"
+      },
+      {
+        "args": "^(DROP|TRUNCATE)\\s+(TABLE|DATABASE)",
+        "action": "block",
+        "reason": "⚠️ データベースの破壊的操作が実行されました！後続処理を中断します"
+      },
+      {
+        "stderr": "Permission denied",
+        "action": "log",
+        "reason": "権限エラーが発生しました"
+      }
+    ]
   }
 }

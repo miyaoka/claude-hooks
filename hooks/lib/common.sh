@@ -33,7 +33,48 @@ find_claude_config_dir() {
     fi
 }
 
-# 設定ファイルを読み込む
+# 設定ファイルを読み込む（フラット構造版）
+# 引数: フックタイプ (PreToolUse/PostToolUse), ツール名 (Bash)
+# 戻り値: マージされたルール配列のJSON
+load_config_flat() {
+    local hook_type="$1"
+    local tool_name="$2"
+    local local_rules=".claude/$RULES_FILE_NAME"
+    local claude_config_dir=$(find_claude_config_dir)
+    local global_rules=""
+    local global_json="{}"
+    local local_json="{}"
+    
+    # グローバルルールを読み込む
+    if [ -n "$claude_config_dir" ]; then
+        global_rules="$claude_config_dir/$RULES_FILE_NAME"
+        if [ -f "$global_rules" ]; then
+            global_json=$(cat "$global_rules" 2>/dev/null || echo "{}")
+        fi
+    fi
+    
+    # ローカルルールを読み込む
+    if [ -f "$local_rules" ]; then
+        local_json=$(cat "$local_rules" 2>/dev/null || echo "{}")
+    fi
+    
+    # 両方とも空の場合
+    if [ "$global_json" = "{}" ] && [ "$local_json" = "{}" ]; then
+        echo "[]"
+        return
+    fi
+    
+    # フラット構造: グローバル + ローカルの配列を結合（ローカル優先）
+    echo "$global_json" | jq -s --argjson local "$local_json" \
+        --arg hook_type "$hook_type" \
+        --arg tool_name "$tool_name" '
+        .[0] as $global |
+        $local as $local |
+        ($local[$hook_type][$tool_name] // []) + ($global[$hook_type][$tool_name] // [])
+        '
+}
+
+# 設定ファイルを読み込む（階層構造版 - 後方互換性のため残す）
 # 引数: フックタイプ (PreToolUse/PostToolUse), ツール名 (Bash)
 # 戻り値: マージされたルールJSON
 load_config() {

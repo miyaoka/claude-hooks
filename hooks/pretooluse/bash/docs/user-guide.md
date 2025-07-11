@@ -13,22 +13,22 @@ Claude Code で実行される bash コマンドを制御するためのルー�
 ```json
 {
   "PreToolUse": {
-    "Bash": {
-      "コマンド名": [
-        {
-          "pattern": "正規表現パターン", // オプション（省略時はデフォルト）
-          "reason": "理由の説明",
-          "decision": "block|approve" // オプション（省略時は undefined）
-        }
-      ]
-    }
+    "Bash": [
+      {
+        "command": "コマンド名", // オプション（省略時は全コマンドに適用）
+        "args": "引数の正規表現パターン", // オプション
+        "reason": "理由の説明",
+        "decision": "block|approve" // オプション（省略時は undefined）
+      }
+    ]
   }
 }
 ```
 
-各コマンドのルールは配列として定義される。各要素は：
+各ルールは配列の要素として定義される。各要素は：
 
-- `pattern`（オプション）: コマンドの引数部分に対する正規表現パターン。省略時はパターン未指定のデフォルト動作を定義
+- `command`（オプション）: 対象コマンド名。省略時は全コマンドに適用
+- `args`（オプション）: コマンドの引数部分に対する正規表現パターン
 - `reason`: 理由の説明
 - `decision`（オプション）: `"block"` または `"approve"`。省略時は `undefined`（確認要求）
 
@@ -39,29 +39,33 @@ Claude Code で実行される bash コマンドを制御するためのルー�
 ```json
 {
   "PreToolUse": {
-    "Bash": {
-      "rm": [
-        {
-          "pattern": "-rf",
-          "reason": "強制削除は危険",
-          "decision": "block"
-        },
-        {
-          "reason": "通常の削除は確認が必要"
-        }
-      ]
-    }
+    "Bash": [
+      {
+        "command": "rm",
+        "args": "-rf",
+        "reason": "強制削除は危険",
+        "decision": "block"
+      },
+      {
+        "command": "rm",
+        "reason": "通常の削除は確認が必要"
+      },
+      {
+        "args": "--force",
+        "reason": "全コマンドの--forceオプションは確認が必要"
+      }
+    ]
   }
 }
 ```
 
 コマンド実行時の動作：
 
-| 入力コマンド     | 結果     | 理由                                                |
-| ---------------- | -------- | --------------------------------------------------- |
-| `rm file.txt`    | 確認要求 | パターン未指定のルールにマッチ（`decision` 未指定） |
-| `rm -rf dir/`    | ブロック | `-rf` パターンにマッチ（`decision: "block"`）       |
-| `rm -f file.txt` | 確認要求 | どのパターンにもマッチせず、デフォルトルールが適用  |
+| 入力コマンド        | 結果     | 理由                                           |
+| ------------------- | -------- | ---------------------------------------------- |
+| `rm file.txt`       | 確認要求 | `command: "rm"` のみのルールにマッチ           |
+| `rm -rf dir/`       | ブロック | `command: "rm", args: "-rf"` にマッチ          |
+| `npm install --force` | 確認要求 | `args: "--force"` にマッチ（全コマンド対象）   |
 
 ### 複合コマンドの扱い
 
@@ -85,56 +89,54 @@ Claude Code で実行される bash コマンドを制御するためのルー�
 
 ### マージの仕組み
 
-同じコマンドに対するルールは、グローバル → ローカルの順で配列に結合される。以下の例で具体的な動作を示す：
+ルールは配列として定義され、ローカル → グローバルの順で結合される（ローカル優先）。以下の例で具体的な動作を示す：
 
 ```json
 // グローバル (例: ~/.config/claude/hooks.config.json)
 {
   "PreToolUse": {
-    "Bash": {
-      "rm": [
-        {
-          "pattern": "-rf",
-          "reason": "強制削除は危険",
-          "decision": "block"
-        }
-      ]
-    }
+    "Bash": [
+      {
+        "command": "rm",
+        "args": "-rf",
+        "reason": "強制削除は危険",
+        "decision": "block"
+      }
+    ]
   }
 }
 
 // ローカル (.claude/hooks.config.json)
 {
   "PreToolUse": {
-    "Bash": {
-      "rm": [
-        {
-          "pattern": "\\.tmp$",
-          "reason": "一時ファイルの削除はOK",
-          "decision": "approve"
-        }
-      ]
-    }
+    "Bash": [
+      {
+        "command": "rm",
+        "args": "\\.tmp$",
+        "reason": "一時ファイルの削除はOK",
+        "decision": "approve"
+      }
+    ]
   }
 }
 
 // 実際に評価される結合結果
-{
-  "rm": [
-    // グローバルルールが先
-    {
-      "pattern": "-rf",
-      "reason": "強制削除は危険",
-      "decision": "block"
-    },
-    // ローカルルールが後
-    {
-      "pattern": "\\.tmp$",
-      "reason": "一時ファイルの削除はOK",
-      "decision": "approve"
-    }
-  ]
-}
+[
+  // ローカルルールが先（優先）
+  {
+    "command": "rm",
+    "args": "\\.tmp$",
+    "reason": "一時ファイルの削除はOK",
+    "decision": "approve"
+  },
+  // グローバルルールが後
+  {
+    "command": "rm",
+    "args": "-rf",
+    "reason": "強制削除は危険",
+    "decision": "block"
+  }
+]
 ```
 
 この例では、グローバル設定とローカル設定が結合され、評価時は結合された配列の全てのルールが対象となる
@@ -147,34 +149,35 @@ Claude Code で実行される bash コマンドを制御するためのルー�
 
 PreToolUse フックは、マージ後の配列を順番に評価し、最終的に **1 つの decision と reason** を Claude Code に返す
 
-複数のパターンがマッチした場合、優先順位に基づいて最も重要な decision が選ばれる：
+複数のルールがマッチした場合、優先順位に基づいて最も重要な decision が選ばれる：
 
 ```json
-{
-  "rm": [
-    {
-      "pattern": "\\.tmp$",
-      "reason": "一時ファイル（.tmp）の削除はOK",
-      "decision": "approve"
-    },
-    {
-      "pattern": "-rf",
-      "reason": "強制削除は要確認"
-    },
-    {
-      "pattern": "/etc",
-      "reason": "システムファイルは削除禁止",
-      "decision": "block"
-    }
-  ]
-}
+[
+  {
+    "command": "rm",
+    "args": "\\.tmp$",
+    "reason": "一時ファイル（.tmp）の削除はOK",
+    "decision": "approve"
+  },
+  {
+    "command": "rm",
+    "args": "-rf",
+    "reason": "強制削除は要確認"
+  },
+  {
+    "command": "rm",
+    "args": "/etc",
+    "reason": "システムファイルは削除禁止",
+    "decision": "block"
+  }
+]
 ```
 
 `rm -rf /etc/test.tmp` の場合：
 
-- `.tmp$` パターン（末尾が .tmp）にマッチ → `approve`
-- `-rf` パターンにマッチ → `undefined`
-- `/etc` パターンにマッチ → `block`
+- `command: "rm", args: "\\.tmp$"` にマッチ → `approve`
+- `command: "rm", args: "-rf"` にマッチ → `undefined`
+- `command: "rm", args: "/etc"` にマッチ → `block`
 - 優先順位により `block` が選ばれる
 - 最終的に返される結果：`{"decision": "block", "reason": "システムファイルは削除禁止"}`
 
@@ -196,48 +199,35 @@ PreToolUse フックは、マージ後の配列を順番に評価し、最終的
 2. 未指定（ユーザー確認）
 3. `approve` （最低優先）
 
-### デフォルトとパターンの関係
+### 全コマンド対象のルール
 
-**重要な概念**：
-
-- **パターンなし**（`pattern` フィールドが省略）= デフォルト動作
-- **パターンあり**（`pattern` フィールドに正規表現）= 特定条件での動作
-
-処理の流れ：
-
-1. 配列を順番に評価
-2. パターンなしエントリーが見つかるたびに、デフォルトを更新
-3. パターンありエントリーでマッチしたものがあれば、優先順位に基づいて選択
-4. 最終的に、パターンマッチがあればそれを使用、なければデフォルトを使用
-
-#### 例: デフォルトとパターンの組み合わせ
+`command` フィールドを省略することで、全てのコマンドに適用されるルールを定義できる：
 
 ```json
-{
-  "touch": [
-    {
-      "reason": "touchコマンドのデフォルトは承認",
-      "decision": "approve"
-    },
-    {
-      "pattern": "/etc",
-      "reason": "システムファイルへのtouchは禁止",
-      "decision": "block"
-    },
-    {
-      "pattern": "\\.conf$",
-      "reason": "設定ファイルの作成は要確認"
-    }
-  ]
-}
+[
+  {
+    "command": "touch",
+    "reason": "touchコマンドは基本的に承認",
+    "decision": "approve"
+  },
+  {
+    "command": "touch",
+    "args": "/etc",
+    "reason": "システムファイルへのtouchは禁止",
+    "decision": "block"
+  },
+  {
+    "args": "--force",
+    "reason": "全コマンドの--forceオプションは要確認"
+  }
+]
 ```
 
 この場合の動作：
 
-- `touch file.txt` → 自動承認（どのパターンにもマッチしないため、デフォルトルールの `approve` が適用）
-- `touch /etc/hosts` → ブロック（`/etc` パターンにマッチし、`decision: "block"` が適用）
-- `touch app.conf` → ユーザー確認（`\.conf$` パターンにマッチし、`decision` 未指定のため確認要求）
-- `touch file.txt /etc/hosts app.conf` → ブロック（`/etc` パターンがコマンド全体にマッチ）
+- `touch file.txt` → 自動承認（`command: "touch"` のみのルールにマッチ）
+- `touch /etc/hosts` → ブロック（`command: "touch", args: "/etc"` にマッチ）
+- `npm install --force` → 確認要求（`args: "--force"` にマッチ、全コマンド対象）
 
 > **重要**: パターンマッチングはコマンドの引数部分に対して行われる。例えば `touch file.txt /etc/hosts` というコマンドの場合、パターンは `"file.txt /etc/hosts"` という引数部分に対して評価される。そのため `/etc` というパターンは、引数のどこかに `/etc` が含まれていればマッチする
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# PreToolUse/Bash Hook（フラット構造版）
+# PreToolUse/Bash Hook
 
 # 定数定義
 readonly HOOK_TYPE="PreToolUse"
@@ -27,8 +27,8 @@ hook_main() {
     local command=$(extract_json_value "$input" '.tool_input.command // empty')
     local working_dir=$(extract_json_value "$input" '.tool_input.working_directory // empty')
     
-    # 設定ファイルを読み込む（フラット構造）
-    local config=$(load_and_validate_config_flat)
+    # 設定ファイルを読み込む
+    local config=$(load_and_validate_config)
     
     # コマンドを評価
     local result=$(evaluate_bash_command "$command" "$config")

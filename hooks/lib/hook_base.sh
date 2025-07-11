@@ -41,7 +41,24 @@ read_and_validate_input() {
     echo "$input"
 }
 
-# 設定ファイルを読み込み、検証する
+# 設定ファイルを読み込み、検証する（フラット構造版）
+# 引数: なし
+# 戻り値: 設定配列JSON（標準出力）、設定が空の場合は終了
+load_and_validate_config_flat() {
+    # 設定ファイルを読み込む（フラット構造）
+    local config=$(load_config_flat "$HOOK_TYPE" "$TOOL_NAME")
+    
+    # 設定が空の場合
+    if [ "$config" = "[]" ] || [ -z "$config" ]; then
+        echo "$EMPTY_RESULT"
+        exit 0
+    fi
+    
+    # 設定を返す
+    echo "$config"
+}
+
+# 設定ファイルを読み込み、検証する（階層構造版 - 後方互換性のため残す）
 # 引数: なし
 # 戻り値: 設定JSON（標準出力）、設定が空の場合は終了
 load_and_validate_config() {
