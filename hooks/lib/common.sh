@@ -64,14 +64,35 @@ load_config_flat() {
         return
     fi
     
-    # フラット構造: グローバル + ローカルの配列を結合（ローカル優先）
+    # フラット構造: ローカル + グローバルの配列を結合し、重複を除去
     echo "$global_json" | jq -s --argjson local "$local_json" \
         --arg hook_type "$hook_type" \
         --arg tool_name "$tool_name" '
         .[0] as $global |
         $local as $local |
-        ($local[$hook_type][$tool_name] // []) + ($global[$hook_type][$tool_name] // [])
-        '
+        # グローバル + ローカルの単純結合（ローカル優先）
+        (($global[$hook_type][$tool_name] // []) + ($local[$hook_type][$tool_name] // [])) |
+        # 畳み込み処理: 後続のルールで前のルールを上書き
+        reduce .[] as $rule ([];
+            . as $acc |
+            # 上書き対象を探す
+            # 1. command が同じで args がない既存ルール → 新しいルールも args がない場合は上書き
+            # 2. command と args が完全一致する既存ルール → 上書き
+            if ($rule.command != null) then
+                ($acc | map(
+                    if (.command == $rule.command and 
+                        ((.args == $rule.args) or
+                         ((.args // null) == null and ($rule.args // null) == null))) then
+                        empty  # このルールを除外
+                    else
+                        .  # このルールを保持
+                    end
+                )) + [$rule]
+            else
+                # commandがない場合はそのまま追加
+                $acc + [$rule]
+            end
+        )'
 }
 
 # 設定ファイルを読み込む（階層構造版 - 後方互換性のため残す）
