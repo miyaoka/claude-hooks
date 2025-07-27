@@ -1,6 +1,12 @@
+> [!CAUTION]
+> TypeScript版に移行: https://github.com/miyaoka/claude-hooks-script
+
+----
+
 # Claude Hooks
 
 Claude Code の動作を拡張・制御するフックコレクション
+
 
 ## 概要
 
